@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "wastewise-410108",
+  "private_key_id": "c83d8432521ddbe4413ef0d1bd76aaff6b330640",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1CW5NYkqj3arc\nqtj102ncjPaDynfehVdvhc3/PXZOxCBfEi2x9I+FOjAOtFcmK5rchjXX4KahqFDe\nGU9cRPsD5VvkgSKQhJWTN2+24lLp/Y3+CJKEqEZxFD5RqKFPIomGRDUx8gj7J4xh\n8QrBM09njSioyKaVq9yA8JFJias/H+IFfC8FaSgGDViZV47z7k+gZVy9hNXwEd6n\nen5kzQZ6Pa24+E2MntUkxTuRyR/E7rUtImSH5T6VqRXRhaR2CHuh8XxGo2Gzdhs9\naSaBEdDhj/eDh86ce8gVx3qrkyaUGqcFFrKrKoqzmRBECEhYX6Ileu4260HAETZb\nYFMbq+VlAgMBAAECggEAA91SrHY3r63Qsus2vHCp5tpffMq6qlZgWnIZxqQSPXY0\nVrM1pIHa+nYWhonU/myZ3rFCvvv9sp+8MjGKHycd0KR5xLP4/+rEoqLhUJ8eM/6E\npHKcZhaNgmZzOh0GbIEJPIOCOzG2fV4HwiN6HkuxGz3JK2k1HSbRCzOXdmFo9Wz4\nkdkshvxucYTvtKOjwqERsMH3jqTjSplXgfxvM/2q5k6AB5MkP6sw/ByFS5GBXRZH\njGFS0tOcHxDYnHpVTYfRk4T1G4r8ZC+FU5zLIOmSCaIoaGSoYobv9CdEV6oPcnF1\nAllElUzvCMZ9qtr852JFI2BKhzsLmN++93JgztBUQQKBgQDujjYsVfUJrzKDAAH4\nZz/Z7Iu3ed6x72oTyT69Zpgg03eIsD2RNUE0vP2MK5ZXBYd5DtlwJo9gRHHOUpwP\nqRN0jJinyn3HqP+TT7rn3T4wlfOO5Re+LbLzMzgjt8USJnpVDPoxMRigSMimZlAe\nidgaRbVkUwLq1WfoRxzUYjJpdQKBgQDCRnZu/CIPtZKyLU7ta2iu05HbURvQSbwV\npm7F2xi8qroBhVAWCj9QYmGA52ye6wUJfjGtiVSY11obJ0V7NQ4T1KeVQzh2JNRP\nXF3HBQxcjXNpbtlSo/mZ8kGpfhHyqpQpA/RxosgcPkCBCswnLUkJT65/6ddaaH6D\n16Gv6cIeMQKBgAmc/3/f4uUGA2IWEP5CoucUSjkVlyzSehLcDEQzqzO/cdS3TXPZ\nkowehZUteHx/Q4tUVtzXIPX/LBrlZ1aWOKt8svYoCdOO8uWr09teJhBtKoh6oO9Q\nBiMY0E1YLX/ivxFIWZi74sMqy7Mw8k+YvHWqk3m8gqSV/v70RqwkXOW1AoGBAI61\nDdh281pQyaKCr8CtLqeFmFXfXawCDdxldmd2itREIQBu+iZGfr3AltkGpn6SKxAP\nF9Te1Tq0rmbV0S8xCNc+VZ/KUhZO9XoaYnSIW808xrODDraq5vXTw7IKfoqgDNeY\nJR64MYC1pdJkqRR6KnVhh9BEaMHrkkuswQOklchxAoGBAItuPgH/MwEFukDLzQV8\nBMG7SE+wcbLzntnkWiHpSZngwj6IZGdtswPQvJQBzXlyu4dwn+FzkyY/jBtyg54c\nc2fW7HkAAcJNj+o83wy+1QYQnjPpQk2YGzQpn4gp632HG+QcSEhkCnCHmcMuRU+U\nLQH9PFcu+pkrSKu1lwoqNAqW\n-----END PRIVATE KEY-----\n",
+  "client_email": "wastewise-image-labeling@wastewise-410108.iam.gserviceaccount.com",
+  "client_id": "113178788547962615693",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/wastewise-image-labeling%40wastewise-410108.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
