@@ -1,0 +1,3 @@
+interface BaseComponent {
+    init(): void;
+}

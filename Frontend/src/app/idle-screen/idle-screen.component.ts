@@ -1,4 +1,6 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, EventEmitter, Output, ViewEncapsulation } from '@angular/core';
+import { ApiService } from '../api.service';
+import '../base.component';
 
 @Component({
   selector: 'app-idle-screen',
@@ -9,14 +11,26 @@ import { Component, ViewEncapsulation } from '@angular/core';
   encapsulation: ViewEncapsulation.None
 })
 
-export class IdleScreenComponent {
+export class IdleScreenComponent implements BaseComponent {
+    @Output() switch = new EventEmitter<void>();
+    
     images: string[] = ['Idle1.png', 'Idle2.png'];
     idx = 0;
     currentImage: string = '';
+    
 
-    ngOnInit(): void {
+    constructor(private api: ApiService) {}
+
+    init(): void {
+        this.idx = 0
         this.nextImage()
-        setInterval(() => {this.nextImage()}, 5000)
+        let handle = setInterval(() => {this.nextImage()}, 5000)
+        this.api.callAPI('/idle').subscribe(
+            (response) => {
+                clearInterval(handle);
+                this.switch.emit();
+            }
+        )
     }
     
     nextImage() : void {

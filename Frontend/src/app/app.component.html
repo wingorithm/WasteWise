@@ -1,3 +1,4 @@
-<main>
-    <app-idle-screen></app-idle-screen>
+<main [class]="state">
+    <app-idle-screen #idle (switch)="nextComponent('main')"></app-idle-screen>
+    <app-detect-page #main (switch)="nextComponent('idle')"></app-detect-page>
 </main>

@@ -6,6 +6,14 @@
     height: 100vh;
 }  */
 
+.idle app-idle-screen {
+    display: block !important;
+}
+
+app-idle-screen {
+    display: none;
+}
+
 app-idle-screen img {
     position: fixed;
     top: 0;

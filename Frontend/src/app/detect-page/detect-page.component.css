@@ -1,0 +1,32 @@
+app-detect-page {
+    display: none;
+}
+
+.main app-detect-page {
+    display: block !important;
+}
+
+app-detect-page .container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+}
+
+app-detect-page .decor {
+    height: 100px;
+    width: 100%;
+    background-color: #008001;
+}
+
+
+app-detect-page .mascot {
+    position: absolute;
+    top: 80%;
+    left: -10%;    
+    transition: left 1s ease-in-out;
+}
