@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { IdleScreenComponent } from './idle-screen/idle-screen.component';
@@ -9,7 +9,8 @@ import { DetectPageComponent } from './detect-page/detect-page.component';
     standalone: true,
     imports: [CommonModule, RouterOutlet, IdleScreenComponent, DetectPageComponent],
     templateUrl: './app.component.html',
-    styleUrl: './app.component.css'
+    styleUrl: './app.component.css',
+    encapsulation: ViewEncapsulation.None
 })
 
 export class AppComponent {

@@ -1,8 +1,17 @@
 <div class="container">
     <div class="decor"></div>
-    <div class="wrapper">
-        <div class="webcam"></div>
-    </div>
     <div class="decor"></div>
-</div>
-<img id="mascot" src="./assets/mascot-pointing.png">
+    <div [class]="started">
+        <div class="cameraContainer" *ngIf="showCamera">
+            <webcam
+            [width]="1080"
+            [height]="720"
+            ></webcam>
+            <div id="mascot">
+                <img src="./assets/mascot-nunjuk.png"/>
+                <div class="chat">{{chat}}</div>
+            </div>
+            
+        </div>
+    </div>
+</div>  

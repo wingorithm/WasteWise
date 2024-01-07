@@ -16,7 +16,7 @@ export class IdleScreenComponent implements BaseComponent {
     
     images: string[] = ['Idle1.png', 'Idle2.png'];
     idx = 0;
-    currentImage: string = '';
+    currentImage!: string;
     
 
     constructor(private api: ApiService) {}

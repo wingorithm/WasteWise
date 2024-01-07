@@ -10,7 +10,7 @@ CORS(app)
 
 @app.route('/idle', methods=['GET'])
 def long_polling_idle():
-    timeout = 12  # Response delay in seconds
+    timeout = 5  # Response delay in seconds
 
     # Simulate a long process
     time.sleep(timeout)
