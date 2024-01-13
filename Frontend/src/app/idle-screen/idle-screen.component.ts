@@ -1,5 +1,5 @@
+import { HttpHandler } from '@angular/common/http';
 import { Component, EventEmitter, Output, ViewEncapsulation } from '@angular/core';
-import { ApiService } from '../api.service';
 
 @Component({
   selector: 'app-idle-screen',
@@ -11,25 +11,19 @@ import { ApiService } from '../api.service';
 })
 
 export class IdleScreenComponent {
-    @Output() switch = new EventEmitter<void>();
-    
     images: string[] = ['Idle - 1.jpg', 'Idle - 2.jpg'];
     idx = 0;
     currentImage!: string;
+    handle = setInterval.prototype!;
     
-
-    constructor(private api: ApiService) {}
-
     ngOnInit(): void {
         this.idx = 0
         this.nextImage()
-        let handle = setInterval(() => {this.nextImage()}, 5000)
-        this.api.callAPI('/idle').subscribe(
-            (response) => {
-                clearInterval(handle);
-                this.switch.emit();
-            }
-        )
+        this.handle = setInterval(() => {this.nextImage()}, 5000)
+    }
+
+    ngOnDestroy(): void {
+        clearInterval(this.handle);
     }
     
     nextImage() : void {

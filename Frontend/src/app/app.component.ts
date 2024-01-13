@@ -17,8 +17,28 @@ import { RewardingComponent } from './rewarding/rewarding.component';
 })
 
 export class AppComponent {
-    state:string = "reward";
+    state:string = "idle";
+    private socket: WebSocket;
+    classified = 2;
 
+    public constructor() {
+        // idle -> to idle screen
+        // intro -> to start screen
+        // info:class -> 
+        // reward -> to awarding screen
+        this.socket = new WebSocket("ws://localhost:8080/ws");
+        this.socket.onopen = event => { }
+        this.socket.onclose = event => { }
+        this.socket.onmessage = event => {
+            console.log(event.data)
+            var data = event.data.split(":"); 
+            if (data[0] == "info") {
+                this.classified = +data[1]
+            }
+            this.nextComponent(data[0]);
+        }
+    }
+    
     ngInit() : void {
         this.nextComponent(this.state);
     }

@@ -19,14 +19,13 @@ app-detect-page .cameraContainer {
 
 app-detect-page .cameraContainer video {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 0;
+    left: 0;
     
-    width: 1280px;
-    height: 640px;
+    width: 1200px;
+    height: 630px;
     
     transform: translate(-50%, -50%) !important;
-    background: gray;
     object-fit: cover;
 }
 

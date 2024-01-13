@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-classify',
@@ -11,7 +11,7 @@ import { Component } from '@angular/core';
 
 export class ClassifyComponent {
     showAll = true
-    show = 1
+    @Input() show = 1
     state = 0
 
     ngOnInit() : void {

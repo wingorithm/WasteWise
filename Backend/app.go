@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -58,12 +57,15 @@ var lastState = 999
 var trashState = 0
 var trashlastState = 0
 
+// State For Classify
+var classState = 0
+
 func (a *App) configure_routes() {
 	a.r.HandleFunc("/ws", websocketHandle)
 	a.r.HandleFunc("/iot", iotHandler).Methods("POST")   //human
 	a.r.HandleFunc("/iot2", iot2Handler).Methods("POST") //barang masuk
 
-	a.r.HandleFunc("/classify", classify_page) // nanti apus
+	// a.r.HandleFunc("/classify", classify_page) // nanti apus
 	// a.r.HandleFunc("/classify", classify_page).Methods("POST")
 }
 
@@ -89,15 +91,20 @@ func stateHandler(conn *websocket.Conn) {
 		case 1:
 			state = 999
 			if lastState != state {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("state:start")); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("intro")); err != nil {
 					log.Println(err)
 					return
 				}
 			}
+			if classState == 0 {
+				time.Sleep(14 * time.Second)
+				classify_page(conn)
+				classState = 1
+			}
 		case 0:
 			state = 999
 			if lastState != state {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("state:idle")); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("idle")); err != nil {
 					log.Println(err)
 					return
 				}
@@ -113,7 +120,7 @@ func stateTrashHandler(conn *websocket.Conn) {
 		case 2:
 			trashState = 999
 			if trashlastState != trashState {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("state:awarding")); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("reward")); err != nil {
 					log.Println(err)
 					return
 				}
@@ -121,7 +128,7 @@ func stateTrashHandler(conn *websocket.Conn) {
 		case 3:
 			trashState = 999
 			if trashlastState != trashState {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("state:awarding")); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("reward")); err != nil {
 					log.Println(err)
 					return
 				}
@@ -129,7 +136,7 @@ func stateTrashHandler(conn *websocket.Conn) {
 		case 4:
 			trashState = 999
 			if trashlastState != trashState {
-				if err := conn.WriteMessage(websocket.TextMessage, []byte("state:awarding")); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("reward")); err != nil {
 					log.Println(err)
 					return
 				}
@@ -177,6 +184,9 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 			trashState = 4
 		}
 		trashlastState = e.event
+		classState = 0
+		time.Sleep(10 * time.Second)
+		state = 0
 	}
 	log.Println(trashState)
 	log.Println(trashlastState)
@@ -184,40 +194,46 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 	log.Println(state)
 }
 
-func classify_page(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-
-	t := TrashObject{}
-	var labelDesc []string //untuk
-
-	webcam, err := gocv.OpenVideoCapture(0)
-	if err != nil {
-		fmt.Println("Error opening webcam:", err)
+func classify_page(conn *websocket.Conn) {
+	time.Sleep(5 * time.Second)
+	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
+		log.Println(err)
 		return
 	}
-	defer webcam.Close()
 
-	img := gocv.NewMat()
-	defer img.Close()
+	// enableCors(&w)
 
-	time.Sleep(5 * time.Second)
-	if ok := webcam.Read(&img); !ok {
-		fmt.Println("Error reading frame from webcam")
-	}
-	filename := saveFrame(img)
+	// t := TrashObject{}
+	// var labelDesc []string //untuk
 
-	labelDesc = google_vision(filename, labelDesc)
+	// webcam, err := gocv.OpenVideoCapture(0)
+	// if err != nil {
+	// 	fmt.Println("Error opening webcam:", err)
+	// 	return
+	// }
+	// defer webcam.Close()
 
-	t.DetectedAt = time.Now().Local()
-	// t.Type = 1
+	// img := gocv.NewMat()
+	// defer img.Close()
 
-	tJson, _ := json.Marshal(t)
-	labelJson, _ := json.Marshal(labelDesc)
+	// time.Sleep(5 * time.Second)
+	// if ok := webcam.Read(&img); !ok {
+	// 	fmt.Println("Error reading frame from webcam")
+	// }
+	// filename := saveFrame(img)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(tJson)
-	w.Write(labelJson)
+	// labelDesc = google_vision(filename, labelDesc)
+
+	// t.DetectedAt = time.Now().Local()
+	// // t.Type = 1
+
+	// tJson, _ := json.Marshal(t)
+	// labelJson, _ := json.Marshal(labelDesc)
+
+	// w.Header().Set("Content-Type", "application/json")
+	// w.WriteHeader(http.StatusOK)
+	// w.Write(tJson)
+	// w.Write(labelJson)
 	// for _, label := range labelDesc {
 	// 	w.Write([]byte(label))
 	// }

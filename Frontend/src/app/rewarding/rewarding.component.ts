@@ -22,6 +22,6 @@ export class RewardingComponent {
                     this.state = 4;
                 }, 2000)    
             }, 2000)
-        }, 3000)        
+        }, 5000)        
     }
 }
