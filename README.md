@@ -11,6 +11,6 @@
  - Jonathan Lee (Hacker)
 
 ## Sneak Peak to WasteWise phase I
-![phase 1 prototype](https://binusianorg-my.sharepoint.com/personal/erwin_gunawan_binus_ac_id/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Ferwin%5Fgunawan%5Fbinus%5Fac%5Fid%2FDocuments%2FHackFest%202024%20main%2FWasteWise%202%20prototypr%2Epng&parent=%2Fpersonal%2Ferwin%5Fgunawan%5Fbinus%5Fac%5Fid%2FDocuments%2FHackFest%202024%20main&ga=1)
+![phase 1 prototype](https://raw.githubusercontent.com/wingorithm/WasteWise/main/Resource/WasteWise%202%20prototypr.png)
 
 all screen in WasteEise flow:
