@@ -17,7 +17,7 @@ import { RewardingComponent } from './rewarding/rewarding.component';
 })
 
 export class AppComponent {
-    state:string = "reward";
+    state:string = "idle";
     private socket: WebSocket;
     classified = 3;
 

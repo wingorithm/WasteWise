@@ -153,6 +153,7 @@ func stateHandler(conn *websocket.Conn) {
 		switch state {
 		case 1:
 			state = 999
+			log.Println("state")
 			if lastState != state {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("intro")); err != nil {
 					log.Println(err)
@@ -160,7 +161,8 @@ func stateHandler(conn *websocket.Conn) {
 				}
 			}
 			if classState == 0 {
-				time.Sleep(14 * time.Second)
+				log.Println("mauuuu mulai camera")
+				time.Sleep(8 * time.Second)
 				classify_page(conn)
 				classState = 1
 			}
@@ -211,16 +213,22 @@ func stateTrashHandler(conn *websocket.Conn) {
 func iotHandler(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	var e Event
+	timeout := 0 * time.Second
 
 	temp, _ := io.ReadAll(r.Body)
 	e.event, _ = strconv.Atoi(string(temp))
 
-	if e.event == 1 {
-		w.Write([]byte("1"))
-		state = 1
-	} else {
-		w.Write([]byte("0"))
-		state = 0
+	w.WriteHeader(http.StatusOK)
+	select {
+	case <-time.After(timeout):
+		if e.event == 1 {
+			w.Write([]byte("1"))
+			state = 1
+			timeout = 14 * time.Second
+		} else {
+			w.Write([]byte("0"))
+			state = 0
+		}
 	}
 	lastState = e.event
 
@@ -263,12 +271,26 @@ func classify_page(conn *websocket.Conn) {
 	t := TrashObject{}
 	var labelDesc []string //untuk
 
-	webcam, err := gocv.OpenVideoCapture(0)
+	// devices, err := gocv.Enume()
+	// if err != nil {
+	// 	fmt.Println("Error enumerating video capture devices:", err)
+	// 	return
+	// }
+
+	// // Print information about available cameras
+	// fmt.Println("Available video capture devices:")
+	// for i, device := range devices {
+	// 	fmt.Printf("%d: %s\n", i, device)
+	// }
+
+	log.Println("mulai camera")
+	webcam, err := gocv.OpenVideoCapture(1)
+	// 2 -> obs
 	if err != nil {
 		fmt.Println("Error opening webcam:", err)
 		return
 	}
-	defer webcam.Close()
+	log.Println("mulai camera berhasil")
 
 	img := gocv.NewMat()
 	defer img.Close()
@@ -276,26 +298,31 @@ func classify_page(conn *websocket.Conn) {
 	macObjectOrganik := 0
 	macObjectlainya := 0
 
-	for { //take 5 image
-		time.Sleep(1 * time.Second)
-		if ok := webcam.Read(&img); !ok {
-			fmt.Println("Error reading frame from webcam")
-		}
-		filename := saveFrame(img)
-		t = google_vision(filename, labelDesc)
-		// t = google_vision("./sample image/snacl.jpg", labelDesc)
+	if classState == 0 {
+		log.Println("masuk camera1")
+		for { //take 5 image
+			log.Println("masuk camera")
+			time.Sleep(1 * time.Second)
+			if ok := webcam.Read(&img); !ok {
+				fmt.Println("Error reading frame from webcam")
+			}
+			filename := saveFrame(img)
+			t = google_vision(filename, labelDesc)
+			// t = google_vision("./sample image/snacl.jpg", labelDesc)
 
-		if t.event == 1 {
-			maxObjectRecycle += 1
-		} else if t.event == 2 {
-			macObjectOrganik += 1
-		} else {
-			macObjectlainya += 1
-		}
+			if t.event == 1 {
+				maxObjectRecycle += 1
+			} else if t.event == 2 {
+				macObjectOrganik += 1
+			} else {
+				macObjectlainya += 1
+			}
 
-		if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
-			break
+			if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
+				break
+			}
 		}
+		webcam.Close()
 	}
 
 	res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
@@ -308,21 +335,25 @@ func classify_page(conn *websocket.Conn) {
 			log.Println(err)
 			return
 		}
+		classState = 0
 	} else if res == float64(macObjectOrganik) {
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
 			log.Println(err)
 			return
 		}
+		classState = 0
 	} else {
 		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
 			log.Println(err)
 			return
 		}
+		classState = 0
 	}
 }
 
-func saveFrame(frame gocv.Mat) string {
-	filename := filepath.Join("../Frontend/src/assets", "frame_image.jpg")
+func saveFrame(frame gocv.Mat) string { //file baru setelah ganti orang
+	log.Println("masuk camera")
+	filename := filepath.Join("../Frontend/src/assets/sample", "frame_image.jpg")
 	// filename := filepath.Join("../Frontend/src/assets", fmt.Sprintf("frame_%s.jpg", time.Now().Format("20060102150405")))
 
 	// Write the frame to the file
@@ -336,7 +367,7 @@ func saveFrame(frame gocv.Mat) string {
 
 func google_vision(filename string, labelDesc []string) TrashObject {
 	// Timeout harus ada
-
+	// INGET REGION CONFIDENCE
 	ctx := context.Background()
 
 	// Creates a client.
