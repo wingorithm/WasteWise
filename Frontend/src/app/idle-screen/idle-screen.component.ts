@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Output, ViewEncapsulation } from '@angular/core';
 import { ApiService } from '../api.service';
-import '../base.component';
 
 @Component({
   selector: 'app-idle-screen',
@@ -11,17 +10,17 @@ import '../base.component';
   encapsulation: ViewEncapsulation.None
 })
 
-export class IdleScreenComponent implements BaseComponent {
+export class IdleScreenComponent {
     @Output() switch = new EventEmitter<void>();
     
-    images: string[] = ['Idle1.png', 'Idle2.png'];
+    images: string[] = ['Idle - 1.jpg', 'Idle - 2.jpg'];
     idx = 0;
     currentImage!: string;
     
 
     constructor(private api: ApiService) {}
 
-    init(): void {
+    ngOnInit(): void {
         this.idx = 0
         this.nextImage()
         let handle = setInterval(() => {this.nextImage()}, 5000)
@@ -34,7 +33,7 @@ export class IdleScreenComponent implements BaseComponent {
     }
     
     nextImage() : void {
-        this.currentImage = '/assets/' + this.images[this.idx];
+        this.currentImage = '/assets/page/' + this.images[this.idx];
         console.log(this.currentImage)
         this.idx = (this.idx + 1) % this.images.length;
     }

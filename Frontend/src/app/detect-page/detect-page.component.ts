@@ -11,17 +11,17 @@ import { CommonModule } from '@angular/common';
   styleUrl: './detect-page.component.css',
   encapsulation: ViewEncapsulation.None
 })
-export class DetectPageComponent implements BaseComponent {
+export class DetectPageComponent {
     @Output() switch = new EventEmitter<void>();
 
     started: string = "";
     chat: string = "";
     showCamera = false;
+    allowCameraSwitch = false
 
     constructor(private api: ApiService) {}
 
-    init(): void {
-        setTimeout(() => {this.started = "active"}, 10);
+    ngOnInit(): void {
         this.showCamera = true;
         this.chat = "Sekarang periksa yuk sampah kamu itu jenis apa"
 

@@ -1,17 +1,9 @@
-<div class="container">
-    <div class="decor"></div>
-    <div class="decor"></div>
-    <div [class]="started">
-        <div class="cameraContainer" *ngIf="showCamera">
-            <webcam
-            [width]="1080"
-            [height]="720"
-            ></webcam>
-            <div id="mascot">
-                <img src="./assets/mascot-nunjuk.png"/>
-                <div class="chat">{{chat}}</div>
-            </div>
-            
-        </div>
+<div class="fullscreen">
+    <div class="cameraContainer" *ngIf="showCamera">
+        <webcam
+            [allowCameraSwitch]="allowCameraSwitch"
+        ></webcam>
     </div>
+    <img src="./assets/page/Guide - 3.jpg"/>
+    <div class="bubble-chat">Sekarang periksa yuk jenis sampah kamu</div>
 </div>  

@@ -1,3 +1,0 @@
-interface BaseComponent {
-    init(): void;
-}
