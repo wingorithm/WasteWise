@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,9 +28,6 @@ type App struct {
 	r *mux.Router
 }
 
-// scanner <- response 1, Trashobject
-// award <- response 1,  && dashboard <- response, trashobject
-// state:idle (change frontend)
 type Event struct {
 	event int `json:"event"`
 }
@@ -47,7 +45,72 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-var whiteList = map[string]string{"name": "Sammy", "animal": "shark", "color": "blue", "location": "ocean"}
+// Scoring 1-3
+var recycleWhiteList = map[string]int{ // plastic bottle || can || cardboard
+	"recycleable":            3,
+	"Bottled water":          1,
+	"Plastic bottle":         3,
+	"Water bottle":           1,
+	"Drinkware":              1,
+	"Bottle":                 2,
+	"Packing materials":      1,
+	"Paper bag":              1,
+	"Box":                    1,
+	"Carton":                 2,
+	"Cardboard":              3,
+	"Tin,":                   1,
+	"Beverage can":           3,
+	"Aluminum can,":          3,
+	"Tin can":                3,
+	"Soft drink":             1,
+	"Carbonated soft drinks": 1,
+	"Metal":                  2,
+	"Nickel":                 1,
+	"Packaging and labeling": -2,
+	"Plastic bag":            -2,
+	"Logo":                   -2,
+	"Brand":                  -2,
+	"Snack":                  -1,
+}
+var organikWhiteList = map[string]int{
+	"Vegetable":              3,
+	"Food":                   3,
+	"Fruit":                  3,
+	"Plant":                  1,
+	"Natural foods":          1,
+	"Junk food":              1,
+	"Gluten":                 1,
+	"Staple food":            1,
+	"Ingredient":             2,
+	"Peel":                   1,
+	"Banana":                 1,
+	"Dish":                   1,
+	"Soil":                   1,
+	"Herb":                   1,
+	"Packaging and labeling": -2,
+	"Plastic bag":            -2,
+	"Logo":                   -2,
+	"Brand":                  -2,
+	"Snack":                  -1,
+}
+var blackList = map[string]int{
+	"Nose":       1,
+	"Hair":       1,
+	"Face":       1,
+	"Skin":       1,
+	"Head":       1,
+	"Hand":       1,
+	"Eye":        1,
+	"Lip":        1,
+	"Mouth":      1,
+	"Photograph": 1,
+	"Happy":      1,
+	"Finger":     1,
+	"Gesture":    1,
+	"Organ":      1,
+	"Joint":      1,
+	"Shoulder":   1,
+}
 
 // nodemcu -> 1 (ada orang) / 0 (gk ada orang)
 var state = 999
@@ -185,6 +248,7 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		trashlastState = e.event
 		classState = 0
+		w.WriteHeader(http.StatusOK)
 		time.Sleep(10 * time.Second)
 		state = 0
 	}
@@ -195,48 +259,66 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func classify_page(conn *websocket.Conn) {
-	time.Sleep(5 * time.Second)
-	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
-		log.Println(err)
+	// tSlice := []TrashObject{}
+	t := TrashObject{}
+	var labelDesc []string //untuk
+
+	webcam, err := gocv.OpenVideoCapture(0)
+	if err != nil {
+		fmt.Println("Error opening webcam:", err)
 		return
 	}
+	defer webcam.Close()
 
-	// enableCors(&w)
+	img := gocv.NewMat()
+	defer img.Close()
+	maxObjectRecycle := 0
+	macObjectOrganik := 0
+	macObjectlainya := 0
 
-	// t := TrashObject{}
-	// var labelDesc []string //untuk
+	for { //take 5 image
+		time.Sleep(1 * time.Second)
+		if ok := webcam.Read(&img); !ok {
+			fmt.Println("Error reading frame from webcam")
+		}
+		filename := saveFrame(img)
+		t = google_vision(filename, labelDesc)
+		// t = google_vision("./sample image/snacl.jpg", labelDesc)
 
-	// webcam, err := gocv.OpenVideoCapture(0)
-	// if err != nil {
-	// 	fmt.Println("Error opening webcam:", err)
-	// 	return
-	// }
-	// defer webcam.Close()
+		if t.event == 1 {
+			maxObjectRecycle += 1
+		} else if t.event == 2 {
+			macObjectOrganik += 1
+		} else {
+			macObjectlainya += 1
+		}
 
-	// img := gocv.NewMat()
-	// defer img.Close()
+		if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
+			break
+		}
+	}
 
-	// time.Sleep(5 * time.Second)
-	// if ok := webcam.Read(&img); !ok {
-	// 	fmt.Println("Error reading frame from webcam")
-	// }
-	// filename := saveFrame(img)
+	res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
+	log.Println(t.event)
+	log.Println(t.Name)
+	time.Sleep(2 * time.Second)
 
-	// labelDesc = google_vision(filename, labelDesc)
-
-	// t.DetectedAt = time.Now().Local()
-	// // t.Type = 1
-
-	// tJson, _ := json.Marshal(t)
-	// labelJson, _ := json.Marshal(labelDesc)
-
-	// w.Header().Set("Content-Type", "application/json")
-	// w.WriteHeader(http.StatusOK)
-	// w.Write(tJson)
-	// w.Write(labelJson)
-	// for _, label := range labelDesc {
-	// 	w.Write([]byte(label))
-	// }
+	if res == float64(maxObjectRecycle) {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
+			log.Println(err)
+			return
+		}
+	} else if res == float64(macObjectOrganik) {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
+			log.Println(err)
+			return
+		}
+	} else {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
+			log.Println(err)
+			return
+		}
+	}
 }
 
 func saveFrame(frame gocv.Mat) string {
@@ -252,7 +334,7 @@ func saveFrame(frame gocv.Mat) string {
 	return filename
 }
 
-func google_vision(filename string, labelDesc []string) []string {
+func google_vision(filename string, labelDesc []string) TrashObject {
 	// Timeout harus ada
 
 	ctx := context.Background()
@@ -274,17 +356,48 @@ func google_vision(filename string, labelDesc []string) []string {
 		log.Fatalf("Failed to create image: %v", err)
 	}
 
-	labels, err := client.DetectLabels(ctx, image, nil, 10)
+	labels, err := client.DetectLabels(ctx, image, nil, 20)
 	if err != nil {
 		log.Fatalf("Failed to detect labels: %v", err)
 	}
 
 	for _, label := range labels {
-		labelDesc = append(labelDesc, label.Description)
+		if blackList[string(label.Description)] != 1 {
+			labelDesc = append(labelDesc, label.Description)
+		}
 		fmt.Println(label.Description)
 		fmt.Println(label.Score)
 	}
-	return labelDesc
+
+	return calculateScore(labelDesc)
+}
+
+func calculateScore(labelDesc []string) TrashObject { // {2:Organic , 1: recycleable, 2: lainnya}
+	to := TrashObject{}
+	var maxRecycle, maxOrganic int = 0, 0
+
+	for _, v := range labelDesc {
+		maxRecycle += recycleWhiteList[v]
+		maxOrganic += organikWhiteList[v]
+	}
+
+	len := len(labelDesc)
+	res := math.Max(float64(maxRecycle), float64(maxOrganic))
+
+	if res == float64(maxRecycle) && res > float64(len) {
+		to.event = 1
+		to.DetectedAt = time.Now().UTC()
+		to.Name = "Recycle"
+	} else if res == float64(maxOrganic) && res > float64(len) {
+		to.event = 2
+		to.DetectedAt = time.Now().UTC()
+		to.Name = "Organic"
+	} else {
+		to.event = 3
+		to.DetectedAt = time.Now().UTC()
+		to.Name = "Lainya"
+	}
+	return to
 }
 
 func addTrash(w http.ResponseWriter, r *http.Request) {
