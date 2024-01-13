@@ -21,6 +21,9 @@ export class ClassifyComponent {
                 this.state = 2
                 setTimeout(() => {
                     this.showAll = false;
+                    setTimeout(() => {
+                        this.state = 3;
+                    }, 4000)
                 }, 2500)
             }, 3000)
         }, 3000)

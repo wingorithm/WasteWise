@@ -18,10 +18,7 @@ export class RewardingComponent {
             this.state = 2;
             setTimeout(() => {
                 this.state = 3;
-                setTimeout(() => {
-                    this.state = 4;
-                }, 2000)    
-            }, 2000)
-        }, 5000)        
+            }, 4000)
+        }, 4000)        
     }
 }

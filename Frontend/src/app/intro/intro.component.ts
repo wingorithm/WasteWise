@@ -36,7 +36,7 @@ export class IntroComponent {
             this.text = "Selamat datang di WasteWise";
             setTimeout(() => {
                 this.switch.emit();
-            }, 3000)
-        }, 5000)
+            }, 2500)
+        }, 3000)
     }
 }

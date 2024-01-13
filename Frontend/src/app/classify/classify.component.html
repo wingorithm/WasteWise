@@ -8,20 +8,32 @@
         <img src="./assets/page/Guide - 6.jpg">
     </div>
     <div class="wrapper third" *ngIf="state==2">
-        <div class="recycle item" *ngIf="showAll || show==3">
-            <img src="./assets/items/recycle.png">
-            <p>DAUR ULANG</p>
-        </div>
-        <div class="organik item" *ngIf="showAll || show==2">
-            <img src="./assets/items/organik.png">
-            <p>ORGANIK</p>
-        </div>
-        <div class="lainnya item" *ngIf="showAll || show==1">
+        <div class="lainnya item {{showAll ? 'showall' : show == 3 ? 'show' : 'left'}}">
             <img src="./assets/items/lainnya.png">
             <p>LAINNYA</p>
         </div>
+
+        <div class="organik item {{showAll ? 'showall' : show == 2 ? 'show' : show == 1 ? 'left' : 'right'}}">
+            <img src="./assets/items/organik.png">
+            <p>ORGANIK</p>
+        </div>
+
+        <div class="recycle item {{showAll ? 'showall' : show == 1 ? 'show' : 'right'}}">
+            <img src="./assets/items/recycle.png">
+            <p>DAUR ULANG</p>
+        </div>
+
+
         <div class="showImg item" *ngIf="!showAll" >
             <img id="currentImg" src="./assets/items/sampleImage.jpg">
+            <img id="decor" src="./assets/page/Guide - 14.png">
         </div>
+    </div>
+    <div class="wrapper four" *ngIf="state==3">
+        <img src="./assets/page/Guide - 15.jpg"/>
+        <img id="currentImg" src="./assets/items/sampleImage.jpg">
+        <img id="leftArrow" src="./assets/items/LeftArrow.gif" *ngIf="show == 3"/>
+        <img id="centerArrow" src="./assets/items/CenterArrow.gif" *ngIf="show == 2"/>
+        <img id="rightArrow" src="./assets/items/RightArrow.gif" *ngIf="show == 1"/>
     </div>
 </div>
