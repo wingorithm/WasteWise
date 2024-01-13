@@ -17,9 +17,9 @@ import { RewardingComponent } from './rewarding/rewarding.component';
 })
 
 export class AppComponent {
-    state:string = "idle";
+    state:string = "reward";
     private socket: WebSocket;
-    classified = 2;
+    classified = 3;
 
     public constructor() {
         // idle -> to idle screen

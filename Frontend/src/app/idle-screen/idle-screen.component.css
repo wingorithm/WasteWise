@@ -19,11 +19,21 @@
     align-items: center;
     justify-content: center;
 
-    width: 40%;
-    left: 30%;
-    height: 285px;
+    left: 156px;
+    top: 266px;
 
     position: absolute;
-    top: 93px;
     z-index: 1;
+}
+
+#video {
+    width: 1600px;
+    height: 900px;
+    
+    position: absolute;
+    top: 90px;
+    right: 70px;
+
+    border-radius: 60px;
+    border: 20px solid #FFF;
 }
