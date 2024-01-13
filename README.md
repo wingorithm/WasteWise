@@ -29,4 +29,4 @@ all screen in Wastewise flow:
 ![Guide Screen](https://raw.githubusercontent.com/wingorithm/WasteWise/main/Resource/Guide%20-%209.jpg)
 
  5. Rewarding Screen 
-![Rewarding Screen](https://raw.githubusercontent.com/wingorithm/WasteWise/main/Resource/WasteWise%202%20prototypr.png)
+![Rewarding Screen](https://raw.githubusercontent.com/wingorithm/WasteWise/main/Resource/Rewarding%20-%201.jpg)
