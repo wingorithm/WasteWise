@@ -1,0 +1,27 @@
+<div class="fullscreen">
+    <div class="wrapper first" *ngIf="state==0">
+        <img src="./assets/page/Guide - 5.jpg">
+        <img id="currentImg" src="./assets/items/sampleImage.jpg">
+        <div class="bubble-chat">Yuk pelajari sampah kamu jenis apa</div>
+    </div>
+    <div class="wrapper second" *ngIf="state==1">
+        <img src="./assets/page/Guide - 6.jpg">
+    </div>
+    <div class="wrapper third" *ngIf="state==2">
+        <div class="recycle item" *ngIf="showAll || show==3">
+            <img src="./assets/items/recycle.png">
+            <p>DAUR ULANG</p>
+        </div>
+        <div class="organik item" *ngIf="showAll || show==2">
+            <img src="./assets/items/organik.png">
+            <p>ORGANIK</p>
+        </div>
+        <div class="lainnya item" *ngIf="showAll || show==1">
+            <img src="./assets/items/lainnya.png">
+            <p>LAINNYA</p>
+        </div>
+        <div class="showImg item" *ngIf="!showAll">
+            <img id="currentImg" src="./assets/items/sampleImage.jpg">
+        </div>
+    </div>
+</div>

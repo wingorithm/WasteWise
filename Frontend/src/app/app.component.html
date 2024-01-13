@@ -1,4 +1,7 @@
 <main [class]="state">
-    <app-idle-screen #idle (switch)="nextComponent('main')"></app-idle-screen>
-    <app-detect-page #main (switch)="nextComponent('idle')"></app-detect-page>
+    <app-idle-screen #idle (switch)="nextComponent('intro')" *ngIf='state=="idle"'></app-idle-screen>
+    <app-intro #intro (switch)="nextComponent('main')" *ngIf='state=="intro"'></app-intro>
+    <app-detect-page #main (switch)="nextComponent('idle')" *ngIf='state=="main"'></app-detect-page>
+    <app-classify #info *ngIf='state=="info"'></app-classify>
+    <app-rewarding #reward *ngIf='state=="reward"'></app-rewarding>
 </main>

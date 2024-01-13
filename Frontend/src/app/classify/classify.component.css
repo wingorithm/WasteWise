@@ -1,0 +1,108 @@
+.wrapper {
+    width: 100%;
+    height: 100%;
+    align-items: right;
+    transition: 1s;
+    background-color: wheat !important;
+}
+
+
+.showImg {
+    left: 0 !important;
+    width: 66.666% !important;
+    background-color: wheat;
+    z-index: 0 !important;
+}
+
+.item {
+    position: absolute;
+    width: 33.4%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 180px 180px;
+    box-sizing: border-box;
+    transition: 1s;
+}
+
+.third :nth-child(1) {
+    left: 66.6%;
+    z-index: 3;
+}
+
+.third :nth-child(2) {
+    left: 33.3%;
+    z-index: 2;
+}
+
+.third :nth-child(3) {
+    left: 0%;
+    z-index: 1;
+}
+
+.item p {
+    text-align: center;
+    font-family: Nunito;
+    font-size: 70px;
+    font-style: normal;
+    font-weight: 900;
+    line-height: normal;
+}
+
+.item img {
+    width: 448px;
+    height: 448px;
+    flex: 1;
+    margin: auto;
+    object-fit: contain;
+}
+
+#currentImg {
+    margin: auto;
+    object-fit: contain;
+    width: 800px;
+    height: 500px;
+}
+
+.first #currentImg {
+    z-index: 1;
+    position: absolute;
+    top: 290px;
+    left: 880px;
+}
+
+.lainnya {
+    background-color: #89DF87;
+    color: #FFF;
+}
+
+.organik {
+    background-color: #004064;
+    color: #05EC07;
+}
+
+.recycle {
+    background-color: #EBE66D;
+    color: #E64C3C;
+}
+
+.bubble-chat {
+    color: #000;
+    text-align: center;
+    font-family: Nunito;
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 194px;
+    left: 150px;
+    width: 556px;
+    height: 0px;
+    z-index: 1;
+}
