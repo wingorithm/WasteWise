@@ -22,7 +22,7 @@ export class ClassifyComponent {
                 setTimeout(() => {
                     this.showAll = false;
                 }, 2500)
-            }, 1500)
-        }, 2500)
+            }, 3000)
+        }, 3000)
     }
 }

@@ -11,9 +11,7 @@ import { Component, EventEmitter, Output, ViewEncapsulation } from '@angular/cor
 })
 
 export class IdleScreenComponent {
-    images: string[] = ['Idle - 1.jpg', 'Idle - 2.jpg'];
     idx = 0;
-    currentImage!: string;
     handle = setInterval.prototype!;
     
     ngOnInit(): void {
@@ -27,8 +25,6 @@ export class IdleScreenComponent {
     }
     
     nextImage() : void {
-        this.currentImage = '/assets/page/' + this.images[this.idx];
-        console.log(this.currentImage)
-        this.idx = (this.idx + 1) % this.images.length;
+        this.idx = (this.idx + 1) % 2;
     }
 }
