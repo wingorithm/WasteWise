@@ -20,6 +20,10 @@ func main() {
 	}
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 // wastewise-410108
 
 // go vision package
