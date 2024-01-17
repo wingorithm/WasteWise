@@ -3,15 +3,18 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/rs/cors"
 )
 
 func main() {
 	myApp := NewApp()
 	myApp.configure_routes()
+	handler := cors.AllowAll().Handler(myApp.r)
 
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: myApp.r,
+		Handler: handler,
 	}
 
 	err := server.ListenAndServe()
@@ -20,9 +23,17 @@ func main() {
 	}
 }
 
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-}
+// func enableCors(w *http.ResponseWriter, r *http.Request) {
+// 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+// 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+// 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+// 	// Handle preflight (OPTIONS) requests
+// 	if r.Method == "OPTIONS" {
+// 		(*w).WriteHeader(http.StatusOK)
+// 		return
+// 	}
+// }
 
 // wastewise-410108
 

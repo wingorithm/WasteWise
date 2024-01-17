@@ -2,6 +2,8 @@
     <div class="cameraContainer" *ngIf="showCamera">
         <webcam
             [allowCameraSwitch]="allowCameraSwitch"
+            (imageCapture)="handleImage($event)"
+            [trigger]="triggerObservable"
         ></webcam>
     </div>
     <img src="./assets/page/Guide - 3.jpg"/>

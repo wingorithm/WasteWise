@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"io"
 	"log"
 	"math"
@@ -10,12 +13,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	vision "cloud.google.com/go/vision/apiv1"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"gocv.io/x/gocv"
 )
 
 func NewApp() *App {
@@ -122,11 +125,13 @@ var trashlastState = 0
 
 // State For Classify
 var classState = 0
+var lastclassState = 1
 
 func (a *App) configure_routes() {
 	a.r.HandleFunc("/ws", websocketHandle)
-	a.r.HandleFunc("/iot", iotHandler).Methods("POST")   //human
-	a.r.HandleFunc("/iot2", iot2Handler).Methods("POST") //barang masuk
+	a.r.HandleFunc("/iot", iotHandler).Methods("POST")             //human
+	a.r.HandleFunc("/iot2", iot2Handler).Methods("POST")           //barang masuk
+	a.r.HandleFunc("/imageHandler", classify_page).Methods("POST") //image masuk
 
 	// a.r.HandleFunc("/classify", classify_page) // nanti apus
 	// a.r.HandleFunc("/classify", classify_page).Methods("POST")
@@ -145,7 +150,17 @@ func websocketHandle(w http.ResponseWriter, r *http.Request) {
 
 	go stateHandler(conn)
 	go stateTrashHandler(conn)
+	go stateClassHandler(conn)
 }
+
+// func imageHandler(conn *websocket.Conn) {
+// 	for {
+// 		if classState == 1 {
+
+// 		}
+// 		classState = 0
+// 	}
+// }
 
 func stateHandler(conn *websocket.Conn) {
 	log.Println("handler1 runnning")
@@ -153,7 +168,6 @@ func stateHandler(conn *websocket.Conn) {
 		switch state {
 		case 1:
 			state = 999
-			log.Println("state")
 			if lastState != state {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("intro")); err != nil {
 					log.Println(err)
@@ -161,10 +175,9 @@ func stateHandler(conn *websocket.Conn) {
 				}
 			}
 			if classState == 0 {
-				log.Println("mauuuu mulai camera")
 				time.Sleep(8 * time.Second)
-				classify_page(conn)
-				classState = 1
+				// classify_page(conn)
+				classState = 1 //-> siap terima file jolee
 			}
 		case 0:
 			state = 999
@@ -211,7 +224,7 @@ func stateTrashHandler(conn *websocket.Conn) {
 }
 
 func iotHandler(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+	// enableCors(&w, r)
 	var e Event
 	timeout := 0 * time.Second
 
@@ -239,7 +252,7 @@ func iotHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func iot2Handler(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+	// enableCors(&w, r)
 	var e Event
 
 	temp, _ := io.ReadAll(r.Body)
@@ -266,103 +279,185 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 	log.Println(state)
 }
 
-func classify_page(conn *websocket.Conn) {
+func stateClassHandler(conn *websocket.Conn) { //akalan
+	for {
+		if lastclassState != classState {
+			switch classState {
+			case 2:
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
+					log.Println(err)
+					return
+				}
+				classState = 999
+				lastclassState = 1
+
+			case 3:
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
+					log.Println(err)
+					return
+				}
+				classState = 999
+				lastclassState = 2
+			case 4:
+				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
+					log.Println(err)
+					return
+				}
+				classState = 999
+				lastclassState = 3
+			}
+		}
+	}
+}
+
+// func classify_page(w http.ResponseWriter, r *http.Request) { //akalan
+// 	enableCors(&w, r)
+// 	var e Event
+// 	temp, _ := io.ReadAll(r.Body)
+// 	e.event, _ = strconv.Atoi(string(temp))
+// 	log.Println(e.event)
+
+// 	switch e.event {
+// 	case 2:
+// 		classState = 2
+// 	case 3:
+// 		classState = 3
+// 	case 4:
+// 		classState = 4
+// 	}
+// }
+
+func classify_page(w http.ResponseWriter, r *http.Request) {
+	// enableCors(&w, r)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	// tSlice := []TrashObject{}
 	t := TrashObject{}
 	var labelDesc []string //untuk
 
-	// devices, err := gocv.Enume()
-	// if err != nil {
-	// 	fmt.Println("Error enumerating video capture devices:", err)
-	// 	return
-	// }
-
-	// // Print information about available cameras
-	// fmt.Println("Available video capture devices:")
-	// for i, device := range devices {
-	// 	fmt.Printf("%d: %s\n", i, device)
-	// }
-
-	log.Println("mulai camera")
-	webcam, err := gocv.OpenVideoCapture(1)
-	// 2 -> obs
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("Error opening webcam:", err)
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
 		return
 	}
-	log.Println("mulai camera berhasil")
 
-	img := gocv.NewMat()
-	defer img.Close()
-	maxObjectRecycle := 0
-	macObjectOrganik := 0
-	macObjectlainya := 0
+	filename := DecodeBase64Image(string(body))
+	// // log.Println("==>", imageBytes)
 
-	if classState == 0 {
-		log.Println("masuk camera1")
-		for { //take 5 image
-			log.Println("masuk camera")
-			time.Sleep(1 * time.Second)
-			if ok := webcam.Read(&img); !ok {
-				fmt.Println("Error reading frame from webcam")
-			}
-			filename := saveFrame(img)
-			t = google_vision(filename, labelDesc)
-			// t = google_vision("./sample image/snacl.jpg", labelDesc)
+	// if err != nil {
+	// 	http.Error(w, "Error decoding base64 image", http.StatusInternalServerError)
+	// 	return
+	// }
+	// filename := saveFrame(imageBytes)
 
-			if t.event == 1 {
-				maxObjectRecycle += 1
-			} else if t.event == 2 {
-				macObjectOrganik += 1
-			} else {
-				macObjectlainya += 1
-			}
+	// webcam, err := gocv.OpenVideoCapture(1)
+	// // 2 -> obs
+	// if err != nil {
+	// 	fmt.Println("Error opening webcam:", err)
+	// 	return
+	// }
+	// log.Println("mulai camera berhasil")
 
-			if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
-				break
-			}
-		}
-		webcam.Close()
-	}
+	// img := gocv.NewMat()
+	// defer img.Close()
+	// maxObjectRecycle := 0
+	// macObjectOrganik := 0
+	// macObjectlainya := 0
 
-	res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
-	log.Println(t.event)
-	log.Println(t.Name)
-	time.Sleep(2 * time.Second)
+	// if classState == 0 {
+	// 	log.Println("masuk camera1")
+	// 	for { //take 5 image
+	// 		log.Println("masuk camera")
+	// 		time.Sleep(1 * time.Second)
+	// 		if ok := webcam.Read(&img); !ok {
+	// 			fmt.Println("Error reading frame from webcam")
+	// 		}
 
-	if res == float64(maxObjectRecycle) {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
-			log.Println(err)
-			return
-		}
-		classState = 0
-	} else if res == float64(macObjectOrganik) {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
-			log.Println(err)
-			return
-		}
-		classState = 0
+	t = google_vision(filename, labelDesc)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// w.Write([]byte(string(t.event)))
+	// 		// t = google_vision("./sample image/snacl.jpg", labelDesc)
+
+	if t.event == 1 {
+		log.Println("tedt")
+		// maxObjectRecycle += 1
+	} else if t.event == 2 {
+		log.Println("tedt")
+		// macObjectOrganik += 1
 	} else {
-		if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
-			log.Println(err)
-			return
-		}
-		classState = 0
+		log.Println("tedtz")
+		// macObjectlainya += 1
 	}
+
+	// if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
+	// 	break
+	// }
+	// 	}
+	// 	// webcam.Close()
+	// }
+
+	// res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
+	// log.Println(t.event)
+	// log.Println(t.Name)
+	// time.Sleep(2 * time.Second)
+
+	// if res == float64(maxObjectRecycle) {
+	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
+	// 		log.Println(err)
+	// 		return
+	// 	}
+	// 	classState = 0
+	// } else if res == float64(macObjectOrganik) {
+	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
+	// 		log.Println(err)f
+	// 		return
+	// 	}
+	// 	classState = 0
+	// } else {
+	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
+	// 		log.Println(err)
+	// 		return
+	// 	}
+	// 	classState = 0
+	// }
 }
 
-func saveFrame(frame gocv.Mat) string { //file baru setelah ganti orang
-	log.Println("masuk camera")
-	filename := filepath.Join("../Frontend/src/assets/sample", "frame_image.jpg")
-	// filename := filepath.Join("../Frontend/src/assets", fmt.Sprintf("frame_%s.jpg", time.Now().Format("20060102150405")))
-
-	// Write the frame to the file
-	if ok := gocv.IMWrite(filename, frame); !ok {
-		fmt.Println("Error writing frame to file:", filename)
-	} else {
-		fmt.Println("Frame saved:", filename)
+func DecodeBase64Image(body string) string {
+	// Decode base64-encoded image
+	decodedImage, err := base64.StdEncoding.DecodeString(body)
+	if err != nil {
+		log.Panic("Error decoding base64:")
 	}
-	return filename
+
+	// Create an image.Image from the decoded data
+	img, _, err := image.Decode(strings.NewReader(string(decodedImage)))
+	if err != nil {
+		log.Panic("Error decoding image:")
+	}
+	filePath := saveFrame(img)
+	return filePath
+}
+
+func saveFrame(img image.Image) string { //file baru setelah ganti orang
+	saveFilePath := "../Frontend/src/assets/sample"
+
+	outputFilePath := filepath.Join(saveFilePath, "decoded_image.jpg")
+	outputFile, err := os.Create(outputFilePath)
+	if err != nil {
+		log.Panic("Error creating output file:")
+	}
+	defer outputFile.Close()
+
+	err = jpeg.Encode(outputFile, img, nil)
+	if err != nil {
+		log.Panic("Error encoding image:", err)
+	}
+
+	return outputFilePath
 }
 
 func google_vision(filename string, labelDesc []string) TrashObject {
