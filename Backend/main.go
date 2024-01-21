@@ -23,20 +23,6 @@ func main() {
 	}
 }
 
-// func enableCors(w *http.ResponseWriter, r *http.Request) {
-// 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-// 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-// 	(*w).Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-// 	// Handle preflight (OPTIONS) requests
-// 	if r.Method == "OPTIONS" {
-// 		(*w).WriteHeader(http.StatusOK)
-// 		return
-// 	}
-// }
-
-// wastewise-410108
-
 // go vision package
 // https://pkg.go.dev/cloud.google.com/go/vision/apiv1?utm_source=godoc
 // cloud.google.com/go/vision

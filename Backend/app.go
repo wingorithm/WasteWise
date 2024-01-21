@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"image"
 	"image/jpeg"
 	"io"
@@ -35,7 +34,6 @@ type Event struct {
 	event int `json:"event"`
 }
 
-// {0: recycleable, 1: organik, 2: lainnya}
 type TrashObject struct {
 	Event
 	Name       string    `json:"name"`
@@ -48,27 +46,33 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
-// Scoring 1-3
-var recycleWhiteList = map[string]int{ // plastic bottle || can || cardboard
-	"recycleable":            3,
-	"Bottled water":          1,
+var recycleWhiteList = map[string]int{
+	"recycleable":            5,
+	"Plastic":                5,
+	"Bottled water":          2,
 	"Plastic bottle":         3,
 	"Water bottle":           1,
 	"Drinkware":              1,
-	"Bottle":                 2,
-	"Packing materials":      1,
-	"Paper bag":              1,
-	"Box":                    1,
-	"Carton":                 2,
-	"Cardboard":              3,
-	"Tin,":                   1,
-	"Beverage can":           3,
-	"Aluminum can,":          3,
-	"Tin can":                3,
-	"Soft drink":             1,
+	"Bottle":                 4,
+	"Packing materials":      3,
+	"Paper bag":              3,
+	"Box":                    5,
+	"Carton":                 5,
+	"Cardboard":              5,
+	"Package":                3,
+	"Shipping box":           3,
+	"delivery":               2,
+	"Packaging":              2,
+	"Tin,":                   2,
+	"Beverage can":           5,
+	"Aluminum can,":          5,
+	"Tin can":                5,
+	"Soft drink":             2,
 	"Carbonated soft drinks": 1,
 	"Metal":                  2,
 	"Nickel":                 1,
+	"Laboratory":             1,
+	"Mineral water":          2,
 	"Packaging and labeling": -2,
 	"Plastic bag":            -2,
 	"Logo":                   -2,
@@ -113,32 +117,39 @@ var blackList = map[string]int{
 	"Organ":      1,
 	"Joint":      1,
 	"Shoulder":   1,
+	"finger":     1,
+	"Thumb":      1,
+	"Jaw":        1,
+}
+var indexSlices = map[int]int{
+	1: 1, //Recycle
+	2: 1, //Organic
+	3: 1, //Lainya
 }
 
-// nodemcu -> 1 (ada orang) / 0 (gk ada orang)
+// State for IoT
 var state = 999
 var lastState = 999
-
-// nodemcu terima sampah -> 2:organik / 3:recycle / 4:another
 var trashState = 0
 var trashlastState = 0
 
 // State For Classify
 var classState = 0
 var lastclassState = 1
+var counter = 0
+
+var maxObjectRecycle = 0
+var macObjectOrganik = 0
+var macObjectlainya = 0
 
 func (a *App) configure_routes() {
 	a.r.HandleFunc("/ws", websocketHandle)
-	a.r.HandleFunc("/iot", iotHandler).Methods("POST")             //human
-	a.r.HandleFunc("/iot2", iot2Handler).Methods("POST")           //barang masuk
-	a.r.HandleFunc("/imageHandler", classify_page).Methods("POST") //image masuk
-
-	// a.r.HandleFunc("/classify", classify_page) // nanti apus
-	// a.r.HandleFunc("/classify", classify_page).Methods("POST")
+	a.r.HandleFunc("/iot", iotHandler).Methods("POST")
+	a.r.HandleFunc("/iot2", iot2Handler).Methods("POST")
+	a.r.HandleFunc("/imageHandler", classify_page).Methods("POST")
 }
 
 func websocketHandle(w http.ResponseWriter, r *http.Request) {
-	// Upgrade the HTTP connection to a WebSocket connection.
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -147,20 +158,10 @@ func websocketHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Client connected")
-
 	go stateHandler(conn)
 	go stateTrashHandler(conn)
 	go stateClassHandler(conn)
 }
-
-// func imageHandler(conn *websocket.Conn) {
-// 	for {
-// 		if classState == 1 {
-
-// 		}
-// 		classState = 0
-// 	}
-// }
 
 func stateHandler(conn *websocket.Conn) {
 	log.Println("handler1 runnning")
@@ -224,7 +225,6 @@ func stateTrashHandler(conn *websocket.Conn) {
 }
 
 func iotHandler(w http.ResponseWriter, r *http.Request) {
-	// enableCors(&w, r)
 	var e Event
 	timeout := 0 * time.Second
 
@@ -252,7 +252,6 @@ func iotHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func iot2Handler(w http.ResponseWriter, r *http.Request) {
-	// enableCors(&w, r)
 	var e Event
 
 	temp, _ := io.ReadAll(r.Body)
@@ -268,8 +267,9 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 			trashState = 4
 		}
 		trashlastState = e.event
-		classState = 0
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+
 		time.Sleep(10 * time.Second)
 		state = 0
 	}
@@ -279,62 +279,48 @@ func iot2Handler(w http.ResponseWriter, r *http.Request) {
 	log.Println(state)
 }
 
-func stateClassHandler(conn *websocket.Conn) { //akalan
+func stateClassHandler(conn *websocket.Conn) {
 	for {
-		if lastclassState != classState {
-			switch classState {
-			case 2:
+		if counter == 5 {
+			log.Println(macObjectlainya)
+			log.Println(maxObjectRecycle)
+			log.Println(macObjectOrganik)
+			res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
+			time.Sleep(2 * time.Second)
+
+			if res == float64(maxObjectRecycle) {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
 					log.Println(err)
 					return
 				}
-				classState = 999
-				lastclassState = 1
-
-			case 3:
+				maxObjectRecycle = 0
+				classState = 0
+			} else if res == float64(macObjectOrganik) {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
 					log.Println(err)
 					return
 				}
-				classState = 999
-				lastclassState = 2
-			case 4:
+				macObjectOrganik = 0
+				classState = 0
+			} else {
 				if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
 					log.Println(err)
 					return
 				}
-				classState = 999
-				lastclassState = 3
+				macObjectlainya = 0
+				classState = 0
 			}
+			counter = 0
 		}
 	}
 }
 
-// func classify_page(w http.ResponseWriter, r *http.Request) { //akalan
-// 	enableCors(&w, r)
-// 	var e Event
-// 	temp, _ := io.ReadAll(r.Body)
-// 	e.event, _ = strconv.Atoi(string(temp))
-// 	log.Println(e.event)
-
-// 	switch e.event {
-// 	case 2:
-// 		classState = 2
-// 	case 3:
-// 		classState = 3
-// 	case 4:
-// 		classState = 4
-// 	}
-// }
-
 func classify_page(w http.ResponseWriter, r *http.Request) {
-	// enableCors(&w, r)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// tSlice := []TrashObject{}
-	t := TrashObject{}
+	// t := TrashObject{}
 	var labelDesc []string //untuk
 
 	body, err := io.ReadAll(r.Body)
@@ -344,86 +330,14 @@ func classify_page(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filename := DecodeBase64Image(string(body))
-	// // log.Println("==>", imageBytes)
 
-	// if err != nil {
-	// 	http.Error(w, "Error decoding base64 image", http.StatusInternalServerError)
-	// 	return
-	// }
-	// filename := saveFrame(imageBytes)
-
-	// webcam, err := gocv.OpenVideoCapture(1)
-	// // 2 -> obs
-	// if err != nil {
-	// 	fmt.Println("Error opening webcam:", err)
-	// 	return
-	// }
-	// log.Println("mulai camera berhasil")
-
-	// img := gocv.NewMat()
-	// defer img.Close()
-	// maxObjectRecycle := 0
-	// macObjectOrganik := 0
-	// macObjectlainya := 0
-
-	// if classState == 0 {
-	// 	log.Println("masuk camera1")
-	// 	for { //take 5 image
-	// 		log.Println("masuk camera")
-	// 		time.Sleep(1 * time.Second)
-	// 		if ok := webcam.Read(&img); !ok {
-	// 			fmt.Println("Error reading frame from webcam")
-	// 		}
-
-	t = google_vision(filename, labelDesc)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	// w.Write([]byte(string(t.event)))
-	// 		// t = google_vision("./sample image/snacl.jpg", labelDesc)
-
-	if t.event == 1 {
-		log.Println("tedt")
-		// maxObjectRecycle += 1
-	} else if t.event == 2 {
-		log.Println("tedt")
-		// macObjectOrganik += 1
-	} else {
-		log.Println("tedtz")
-		// macObjectlainya += 1
+	if classState == 1 {
+		// t = google_vision(filename, labelDesc)
+		google_vision(filename, labelDesc)
+		counter += 1
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 	}
-
-	// if (maxObjectRecycle + macObjectOrganik + macObjectlainya) == 5 {
-	// 	break
-	// }
-	// 	}
-	// 	// webcam.Close()
-	// }
-
-	// res := math.Max(float64(macObjectlainya), math.Max(float64(maxObjectRecycle), float64(macObjectOrganik)))
-	// log.Println(t.event)
-	// log.Println(t.Name)
-	// time.Sleep(2 * time.Second)
-
-	// if res == float64(maxObjectRecycle) {
-	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:1")); err != nil {
-	// 		log.Println(err)
-	// 		return
-	// 	}
-	// 	classState = 0
-	// } else if res == float64(macObjectOrganik) {
-	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:2")); err != nil {
-	// 		log.Println(err)f
-	// 		return
-	// 	}
-	// 	classState = 0
-	// } else {
-	// 	if err := conn.WriteMessage(websocket.TextMessage, []byte("info:3")); err != nil {
-	// 		log.Println(err)
-	// 		return
-	// 	}
-	// 	classState = 0
-	// }
 }
 
 func DecodeBase64Image(body string) string {
@@ -488,11 +402,12 @@ func google_vision(filename string, labelDesc []string) TrashObject {
 	}
 
 	for _, label := range labels {
+
 		if blackList[string(label.Description)] != 1 {
+			// log.Println(">>", label.Description)
+			// log.Println(label.Score)
 			labelDesc = append(labelDesc, label.Description)
 		}
-		fmt.Println(label.Description)
-		fmt.Println(label.Score)
 	}
 
 	return calculateScore(labelDesc)
@@ -507,21 +422,27 @@ func calculateScore(labelDesc []string) TrashObject { // {2:Organic , 1: recycle
 		maxOrganic += organikWhiteList[v]
 	}
 
-	len := len(labelDesc)
 	res := math.Max(float64(maxRecycle), float64(maxOrganic))
 
-	if res == float64(maxRecycle) && res > float64(len) {
+	log.Println(labelDesc)
+	log.Println("==================================")
+	log.Println(maxRecycle)
+	log.Println(maxOrganic)
+	if res == float64(maxRecycle) && res > float64(8) {
 		to.event = 1
 		to.DetectedAt = time.Now().UTC()
 		to.Name = "Recycle"
-	} else if res == float64(maxOrganic) && res > float64(len) {
+		maxObjectRecycle += 1
+	} else if res == float64(maxOrganic) && res > float64(8) {
 		to.event = 2
 		to.DetectedAt = time.Now().UTC()
 		to.Name = "Organic"
+		macObjectOrganik += 1
 	} else {
 		to.event = 3
 		to.DetectedAt = time.Now().UTC()
 		to.Name = "Lainya"
+		macObjectlainya += 1
 	}
 	return to
 }
